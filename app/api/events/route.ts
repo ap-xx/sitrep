@@ -36,7 +36,10 @@ export async function GET() {
     console.error("GDELT fetch failed:", gdeltResult.reason);
   }
 
-  if (fetched.length === 0) {
+  const bothFailed =
+    acledResult.status === "rejected" && gdeltResult.status === "rejected";
+
+  if (bothFailed) {
     if (cache) {
       return NextResponse.json({
         events: cache.events,

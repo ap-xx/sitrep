@@ -88,4 +88,18 @@ describe("GET /api/events", () => {
     expect(body.events).toEqual([]);
     expect(body.stale).toBe(true);
   });
+
+  it("returns 200 with empty array when both sources resolve to empty arrays", async () => {
+    fetchAcledEventsMock.mockResolvedValue([]);
+    fetchGdeltEventsMock.mockResolvedValue([]);
+    refineWithClaudeMock.mockImplementation(async (events: ConflictEvent[]) => events);
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.events).toEqual([]);
+    expect(body.stale).toBe(false);
+    expect(refineWithClaudeMock).toHaveBeenCalledWith([]);
+  });
 });
