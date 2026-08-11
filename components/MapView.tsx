@@ -23,7 +23,7 @@ export function MapView({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
 
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -49,7 +49,7 @@ export function MapView({
     if (!map) return;
 
     markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current.clear();
+    markersRef.current = [];
 
     for (const event of events) {
       const marker = new mapboxgl.Marker({ color: SEVERITY_COLOR[event.severity] })
@@ -57,7 +57,7 @@ export function MapView({
         .addTo(map);
 
       marker.getElement().addEventListener("click", () => onSelect(event));
-      markersRef.current.set(event.id, marker);
+      markersRef.current.push(marker);
     }
   }, [events, onSelect]);
 

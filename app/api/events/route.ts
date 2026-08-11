@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { fetchAcledEvents } from "@/lib/acled";
 import { fetchGdeltEvents } from "@/lib/gdelt";
 import { refineWithClaude } from "@/lib/refineWithClaude";
+import { sanitizeEvents } from "@/lib/sanitizeEvents";
 import type { ConflictEvent } from "@/lib/types";
 import { CACHE_TTL_MS, getCache, setCache } from "./cache";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const now = Date.now();
@@ -51,12 +54,25 @@ export async function GET() {
     );
   }
 
-  const refined = await refineWithClaude(fetched);
+  const partialFailureWithEmptyResult =
+    fetched.length === 0 &&
+    (acledResult.status === "rejected" || gdeltResult.status === "rejected");
 
-  setCache({ events: refined, updatedAt: now });
+  if (partialFailureWithEmptyResult && cache) {
+    return NextResponse.json({
+      events: cache.events,
+      stale: true,
+      updatedAt: new Date(cache.updatedAt).toISOString(),
+    });
+  }
+
+  const refined = await refineWithClaude(fetched);
+  const safe = sanitizeEvents(refined);
+
+  setCache({ events: safe, updatedAt: now });
 
   return NextResponse.json({
-    events: refined,
+    events: safe,
     stale: false,
     updatedAt: new Date(now).toISOString(),
   });

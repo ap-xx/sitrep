@@ -11,9 +11,9 @@ vi.mock("@anthropic-ai/sdk", () => ({
 
 import { refineWithClaude } from "./refineWithClaude";
 
-const sampleEvents: ConflictEvent[] = [
-  {
-    id: "abc123",
+function makeEvent(overrides: Partial<ConflictEvent>): ConflictEvent {
+  return {
+    id: "id",
     lat: 13.05,
     lng: 43.25,
     locationName: "Al Mokha",
@@ -24,8 +24,11 @@ const sampleEvents: ConflictEvent[] = [
     timestamp: "2026-08-10T00:00:00.000Z",
     severity: "medium",
     confidence: 90,
-  },
-];
+    ...overrides,
+  };
+}
+
+const sampleEvents: ConflictEvent[] = [makeEvent({ id: "abc123" })];
 
 afterEach(() => {
   createMock.mockReset();
@@ -128,5 +131,46 @@ describe("refineWithClaude", () => {
 
     const result = await refineWithClaude(sampleEvents);
     expect(result).toEqual(sampleEvents);
+  });
+
+  it("caps the number of events sent to Claude at 60, passing the rest through untouched", async () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
+
+    const manyEvents: ConflictEvent[] = Array.from({ length: 65 }, (_, i) =>
+      makeEvent({ id: `event-${i}` }),
+    );
+
+    createMock.mockImplementation(async ({ messages }) => {
+      const prompt = messages[0].content as string;
+      const jsonStart = prompt.indexOf("[");
+      const sentEvents = JSON.parse(prompt.slice(jsonStart)) as ConflictEvent[];
+      const refined = sentEvents.map((e) => ({ ...e, headline: "Refined" }));
+      return { content: [{ type: "text", text: JSON.stringify(refined) }] };
+    });
+
+    const result = await refineWithClaude(manyEvents);
+
+    expect(createMock).toHaveBeenCalledTimes(1);
+    const callArgs = createMock.mock.calls[0][0];
+    const prompt = callArgs.messages[0].content as string;
+    const jsonStart = prompt.indexOf("[");
+    const sentEvents = JSON.parse(prompt.slice(jsonStart)) as ConflictEvent[];
+    expect(sentEvents).toHaveLength(60);
+
+    expect(result).toHaveLength(65);
+    expect(result.slice(0, 60).every((e) => e.headline === "Refined")).toBe(true);
+    expect(result.slice(60)).toEqual(manyEvents.slice(60));
+  });
+
+  it("logs a warning via console.warn when a failure path falls back to raw events", async () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    createMock.mockRejectedValue(new Error("network error"));
+
+    await refineWithClaude(sampleEvents);
+
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 });

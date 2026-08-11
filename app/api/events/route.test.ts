@@ -6,7 +6,7 @@ vi.mock("@/lib/gdelt");
 vi.mock("@/lib/refineWithClaude");
 
 import { GET } from "./route";
-import { resetCacheForTests } from "./cache";
+import { CACHE_TTL_MS, resetCacheForTests } from "./cache";
 import * as acledModule from "@/lib/acled";
 import * as gdeltModule from "@/lib/gdelt";
 import * as refineModule from "@/lib/refineWithClaude";
@@ -102,5 +102,43 @@ describe("GET /api/events", () => {
     expect(body.events).toEqual([]);
     expect(body.stale).toBe(false);
     expect(refineWithClaudeMock).toHaveBeenCalledWith([]);
+  });
+
+  it("dedupes events sharing the same id across sources", async () => {
+    const duplicate: ConflictEvent = { ...sampleEvent, headline: "Duplicate from GDELT" };
+    fetchAcledEventsMock.mockResolvedValue([sampleEvent]);
+    fetchGdeltEventsMock.mockResolvedValue([duplicate]);
+    refineWithClaudeMock.mockImplementation(async (events: ConflictEvent[]) => events);
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(body.events).toHaveLength(1);
+  });
+
+  it("returns the stale cache instead of overwriting it when one source rejects and the other resolves empty", async () => {
+    vi.useFakeTimers();
+    try {
+      fetchAcledEventsMock.mockResolvedValue([sampleEvent]);
+      fetchGdeltEventsMock.mockResolvedValue([]);
+      refineWithClaudeMock.mockImplementation(async (events: ConflictEvent[]) => events);
+
+      // Prime the cache with a successful call.
+      await GET();
+
+      // Advance past the cache TTL so the second call actually re-fetches.
+      vi.advanceTimersByTime(CACHE_TTL_MS + 1);
+
+      fetchAcledEventsMock.mockRejectedValue(new Error("ACLED down"));
+      fetchGdeltEventsMock.mockResolvedValue([]);
+
+      const response = await GET();
+      const body = await response.json();
+
+      expect(body.events).toEqual([sampleEvent]);
+      expect(body.stale).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
