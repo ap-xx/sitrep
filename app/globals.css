@@ -4,6 +4,44 @@
 
 html,
 body {
-  background-color: #05070a;
-  color: #e6edf3;
+  background-color: #040a06;
+  color: #39ff88;
+  font-family: var(--font-terminal), ui-monospace, SFMono-Regular, monospace;
+}
+
+body {
+  position: relative;
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 1px,
+    rgba(0, 0, 0, 0.25) 2px,
+    rgba(0, 0, 0, 0.25) 3px
+  );
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 51;
+  box-shadow: inset 0 0 160px 40px rgba(0, 0, 0, 0.85);
+}
+
+.text-glow {
+  text-shadow: 0 0 4px currentColor, 0 0 12px currentColor;
+}
+
+.mapboxgl-canvas {
+  filter: grayscale(1) sepia(1) hue-rotate(60deg) saturate(4) brightness(0.8) contrast(1.15);
 }

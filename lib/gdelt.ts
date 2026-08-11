@@ -3,7 +3,10 @@ import type { ConflictEvent } from "./types";
 
 const GDELT_ENDPOINT = "https://api.gdeltproject.org/api/v2/geo/geo";
 
-const QUERY = "(war OR conflict OR attack OR strike OR clash OR airstrike OR shelling)";
+const QUERY =
+  "(war OR conflict OR attack OR strike OR clash OR airstrike OR shelling OR " +
+  "earthquake OR flood OR hurricane OR wildfire OR famine OR drought OR " +
+  "outbreak OR epidemic OR pandemic OR evacuation OR humanitarian crisis)";
 
 type GdeltFeature = {
   type: "Feature";

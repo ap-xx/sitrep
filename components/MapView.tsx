@@ -6,20 +6,22 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import type { ConflictEvent } from "@/lib/types";
 
 const SEVERITY_COLOR: Record<ConflictEvent["severity"], string> = {
-  low: "#3fb950",
-  medium: "#d4a72c",
-  high: "#e8590c",
-  critical: "#da3633",
+  low: "#39ff88",
+  medium: "#f4ff45",
+  high: "#ff9f1c",
+  critical: "#ff2d55",
 };
 
 export function MapView({
   events,
   selectedId,
   onSelect,
+  onCountrySelect,
 }: {
   events: ConflictEvent[];
   selectedId: string | null;
   onSelect: (event: ConflictEvent) => void;
+  onCountrySelect: (countryName: string) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -38,10 +40,36 @@ export function MapView({
     });
     mapRef.current = map;
 
+    map.on("load", () => {
+      map.addSource("country-boundaries", {
+        type: "vector",
+        url: "mapbox://mapbox.country-boundaries-v1",
+      });
+      map.addLayer({
+        id: "country-boundaries-fill",
+        type: "fill",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        paint: { "fill-color": "#000000", "fill-opacity": 0 },
+      });
+
+      map.on("click", "country-boundaries-fill", (e) => {
+        const name = e.features?.[0]?.properties?.name_en as string | undefined;
+        if (name) onCountrySelect(name);
+      });
+      map.on("mouseenter", "country-boundaries-fill", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", "country-boundaries-fill", () => {
+        map.getCanvas().style.cursor = "";
+      });
+    });
+
     return () => {
       map.remove();
       mapRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -72,11 +100,11 @@ export function MapView({
 
   if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
     return (
-      <div className="flex h-full flex-1 items-center justify-center bg-panel text-sm opacity-60">
+      <div className="flex h-full w-full items-center justify-center bg-panel text-sm opacity-60">
         Map unavailable — NEXT_PUBLIC_MAPBOX_TOKEN is not configured.
       </div>
     );
   }
 
-  return <div ref={containerRef} className="h-full flex-1" />;
+  return <div ref={containerRef} className="h-full w-full" />;
 }

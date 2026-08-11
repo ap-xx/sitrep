@@ -9,14 +9,26 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        panel: "#0b0f14",
-        "panel-border": "#1f2a33",
-        severity: {
-          low: "#3fb950",
-          medium: "#d4a72c",
-          high: "#e8590c",
-          critical: "#da3633",
+        panel: "#040a06",
+        "panel-border": "#12321d",
+        phosphor: {
+          DEFAULT: "#39ff88",
+          dim: "#1f8f4d",
         },
+        severity: {
+          low: "#39ff88",
+          medium: "#f4ff45",
+          high: "#ff9f1c",
+          critical: "#ff2d55",
+        },
+      },
+      fontFamily: {
+        mono: [
+          "var(--font-terminal)",
+          "ui-monospace",
+          "SFMono-Regular",
+          "monospace",
+        ],
       },
     },
   },

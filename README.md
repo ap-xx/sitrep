@@ -25,6 +25,7 @@ With `.env` fully populated:
 - [ ] Clicking a card in the feed flies the map to that event's location.
 - [ ] The severity filter buttons narrow the feed correctly.
 - [ ] Temporarily setting `ACLED_PASSWORD` to an invalid value and restarting the dev server does **not** crash the app — GDELT-only data still loads, or (if you also break GDELT) the "Live data unavailable" banner appears instead of a blank page.
+- [ ] Clicking on a country's landmass on the map opens a panel with a short Wikipedia summary and the count/dominant severity of tracked events there.
 
 ## Out of scope for this version
 
