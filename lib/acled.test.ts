@@ -62,4 +62,17 @@ describe("fetchAcledEvents", () => {
 
     await expect(fetchAcledEvents()).rejects.toThrow(/status 500/);
   });
+
+  it("throws when ACLED response reports success: false", async () => {
+    vi.stubEnv("ACLED_API_KEY", "test-key");
+    vi.stubEnv("ACLED_EMAIL", "test@example.com");
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ success: false, data: [] }),
+    }) as unknown as typeof fetch;
+
+    await expect(fetchAcledEvents()).rejects.toThrow(/failure/);
+  });
 });
