@@ -8,18 +8,54 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
+function mockTokenThenRead(readResponse: unknown) {
+  global.fetch = vi
+    .fn()
+    .mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ access_token: "test-access-token" }),
+    })
+    .mockResolvedValueOnce(readResponse) as unknown as typeof fetch;
+}
+
 describe("fetchAcledEvents", () => {
   it("throws when credentials are missing", async () => {
-    vi.stubEnv("ACLED_API_KEY", "");
     vi.stubEnv("ACLED_EMAIL", "");
-    await expect(fetchAcledEvents()).rejects.toThrow(/ACLED_API_KEY/);
+    vi.stubEnv("ACLED_PASSWORD", "");
+    await expect(fetchAcledEvents()).rejects.toThrow(/ACLED_EMAIL/);
+  });
+
+  it("throws when the OAuth token request fails", async () => {
+    vi.stubEnv("ACLED_EMAIL", "test@example.com");
+    vi.stubEnv("ACLED_PASSWORD", "test-password");
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+    }) as unknown as typeof fetch;
+
+    await expect(fetchAcledEvents()).rejects.toThrow(/OAuth token request failed/);
+  });
+
+  it("throws when the OAuth token response has no access_token", async () => {
+    vi.stubEnv("ACLED_EMAIL", "test@example.com");
+    vi.stubEnv("ACLED_PASSWORD", "test-password");
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({}),
+    }) as unknown as typeof fetch;
+
+    await expect(fetchAcledEvents()).rejects.toThrow(/missing access_token/);
   });
 
   it("normalizes a successful response into ConflictEvent[]", async () => {
-    vi.stubEnv("ACLED_API_KEY", "test-key");
     vi.stubEnv("ACLED_EMAIL", "test@example.com");
+    vi.stubEnv("ACLED_PASSWORD", "test-password");
 
-    global.fetch = vi.fn().mockResolvedValue({
+    mockTokenThenRead({
       ok: true,
       status: 200,
       json: async () => ({
@@ -40,7 +76,7 @@ describe("fetchAcledEvents", () => {
           },
         ],
       }),
-    }) as unknown as typeof fetch;
+    });
 
     const events = await fetchAcledEvents();
 
@@ -52,26 +88,26 @@ describe("fetchAcledEvents", () => {
   });
 
   it("throws when the HTTP response is not ok", async () => {
-    vi.stubEnv("ACLED_API_KEY", "test-key");
     vi.stubEnv("ACLED_EMAIL", "test@example.com");
+    vi.stubEnv("ACLED_PASSWORD", "test-password");
 
-    global.fetch = vi.fn().mockResolvedValue({
+    mockTokenThenRead({
       ok: false,
       status: 500,
-    }) as unknown as typeof fetch;
+    });
 
     await expect(fetchAcledEvents()).rejects.toThrow(/status 500/);
   });
 
   it("throws when ACLED response reports success: false", async () => {
-    vi.stubEnv("ACLED_API_KEY", "test-key");
     vi.stubEnv("ACLED_EMAIL", "test@example.com");
+    vi.stubEnv("ACLED_PASSWORD", "test-password");
 
-    global.fetch = vi.fn().mockResolvedValue({
+    mockTokenThenRead({
       ok: true,
       status: 200,
       json: async () => ({ success: false, data: [] }),
-    }) as unknown as typeof fetch;
+    });
 
     await expect(fetchAcledEvents()).rejects.toThrow(/failure/);
   });

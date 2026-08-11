@@ -1,7 +1,12 @@
 import { makeEventId } from "./ids";
 import type { ConflictEvent } from "./types";
 
-const ACLED_ENDPOINT = "https://api.acleddata.com/acled/read";
+const ACLED_TOKEN_ENDPOINT = "https://acleddata.com/oauth/token";
+const ACLED_READ_ENDPOINT = "https://acleddata.com/api/acled/read";
+
+type AcledTokenResponse = {
+  access_token?: string;
+};
 
 type AcledRawEvent = {
   event_id_cnty: string;
@@ -34,23 +39,54 @@ function last24HoursDate(): string {
   return d.toISOString().slice(0, 10);
 }
 
-export async function fetchAcledEvents(): Promise<ConflictEvent[]> {
-  const apiKey = process.env.ACLED_API_KEY;
-  const email = process.env.ACLED_EMAIL;
+async function fetchAcledAccessToken(email: string, password: string): Promise<string> {
+  const body = new URLSearchParams({
+    username: email,
+    password,
+    grant_type: "password",
+    client_id: "acled",
+    scope: "authenticated",
+  });
 
-  if (!apiKey || !email) {
-    throw new Error("ACLED_API_KEY and ACLED_EMAIL must be set");
+  const response = await fetch(ACLED_TOKEN_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`ACLED OAuth token request failed with status ${response.status}`);
   }
 
+  const payload = (await response.json()) as AcledTokenResponse;
+
+  if (!payload.access_token) {
+    throw new Error("ACLED OAuth token response missing access_token");
+  }
+
+  return payload.access_token;
+}
+
+export async function fetchAcledEvents(): Promise<ConflictEvent[]> {
+  const email = process.env.ACLED_EMAIL;
+  const password = process.env.ACLED_PASSWORD;
+
+  if (!email || !password) {
+    throw new Error("ACLED_EMAIL and ACLED_PASSWORD must be set");
+  }
+
+  const accessToken = await fetchAcledAccessToken(email, password);
+
   const params = new URLSearchParams({
-    key: apiKey,
-    email,
+    _format: "json",
     event_date: last24HoursDate(),
     event_date_where: ">=",
     limit: "100",
   });
 
-  const response = await fetch(`${ACLED_ENDPOINT}?${params.toString()}`);
+  const response = await fetch(`${ACLED_READ_ENDPOINT}?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
 
   if (!response.ok) {
     throw new Error(`ACLED request failed with status ${response.status}`);
