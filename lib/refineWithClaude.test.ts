@@ -73,4 +73,60 @@ describe("refineWithClaude", () => {
     expect(result).toEqual(sampleEvents);
     expect(createMock).not.toHaveBeenCalled();
   });
+
+  it("falls back to original events when Claude returns valid JSON with a missing required field", async () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
+
+    // Valid JSON but missing sourceUrl field
+    const invalidResponse = [
+      {
+        id: "abc123",
+        lat: 13.05,
+        lng: 43.25,
+        locationName: "Al Mokha",
+        country: "Yemen",
+        headline: "Cargo vessel struck",
+        source: "ACLED",
+        // sourceUrl is missing
+        timestamp: "2026-08-10T00:00:00.000Z",
+        severity: "medium",
+        confidence: 90,
+      },
+    ];
+
+    createMock.mockResolvedValue({
+      content: [{ type: "text", text: JSON.stringify(invalidResponse) }],
+    });
+
+    const result = await refineWithClaude(sampleEvents);
+    expect(result).toEqual(sampleEvents);
+  });
+
+  it("falls back to original events when Claude returns valid JSON with invalid severity value", async () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
+
+    // Valid JSON but severity is invalid
+    const invalidResponse = [
+      {
+        id: "abc123",
+        lat: 13.05,
+        lng: 43.25,
+        locationName: "Al Mokha",
+        country: "Yemen",
+        headline: "Cargo vessel struck",
+        source: "ACLED",
+        sourceUrl: "https://example.com",
+        timestamp: "2026-08-10T00:00:00.000Z",
+        severity: "extreme", // Invalid severity value
+        confidence: 90,
+      },
+    ];
+
+    createMock.mockResolvedValue({
+      content: [{ type: "text", text: JSON.stringify(invalidResponse) }],
+    });
+
+    const result = await refineWithClaude(sampleEvents);
+    expect(result).toEqual(sampleEvents);
+  });
 });
