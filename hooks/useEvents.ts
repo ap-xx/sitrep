@@ -27,12 +27,12 @@ export function useEvents() {
             setData(body);
             setError(null);
           } else {
-            setError("Live data unavailable — retrying");
+            setError("Dados ao vivo indisponíveis — tentando novamente");
           }
         }
       } catch {
         if (!cancelled) {
-          setError("Live data unavailable — retrying");
+          setError("Dados ao vivo indisponíveis — tentando novamente");
         }
       }
     }

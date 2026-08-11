@@ -1,10 +1,10 @@
 import type { ConflictEvent } from "@/lib/types";
 
 const SEVERITY_LABEL: Record<ConflictEvent["severity"], string> = {
-  low: "LOW",
-  medium: "MEDIUM",
-  high: "HIGH",
-  critical: "CRITICAL",
+  low: "BAIXO",
+  medium: "MÉDIO",
+  high: "ALTO",
+  critical: "CRÍTICO",
 };
 
 const SEVERITY_CLASS: Record<ConflictEvent["severity"], string> = {
@@ -17,10 +17,10 @@ const SEVERITY_CLASS: Record<ConflictEvent["severity"], string> = {
 function timeAgo(timestamp: string): string {
   const diffMs = Date.now() - new Date(timestamp).getTime();
   const minutes = Math.max(1, Math.round(diffMs / 60000));
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return `há ${minutes}m`;
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.round(hours / 24)}d ago`;
+  if (hours < 24) return `há ${hours}h`;
+  return `há ${Math.round(hours / 24)}d`;
 }
 
 export function EventCard({
@@ -64,7 +64,7 @@ export function EventCard({
           onClick={(e) => e.stopPropagation()}
           className="text-xs underline opacity-70"
         >
-          SOURCE →
+          FONTE →
         </a>
       )}
     </div>

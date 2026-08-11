@@ -7,6 +7,14 @@ import { EventCard } from "./EventCard";
 
 const FILTERS: SeverityFilterValue[] = ["all", "critical", "high", "medium", "low"];
 
+const FILTER_LABEL: Record<SeverityFilterValue, string> = {
+  all: "TODOS",
+  critical: "CRÍTICO",
+  high: "ALTO",
+  medium: "MÉDIO",
+  low: "BAIXO",
+};
+
 export function NewsFeed({
   events,
   selectedId,
@@ -31,7 +39,7 @@ export function NewsFeed({
               filter === value ? "bg-panel-border" : "opacity-60"
             }`}
           >
-            {value}
+            {FILTER_LABEL[value]}
           </button>
         ))}
       </div>
@@ -45,7 +53,7 @@ export function NewsFeed({
           />
         ))}
         {filtered.length === 0 && (
-          <p className="p-4 text-center text-sm opacity-50">No events match this filter.</p>
+          <p className="p-4 text-center text-sm opacity-50">Nenhum evento corresponde a este filtro.</p>
         )}
       </div>
     </aside>

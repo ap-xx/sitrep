@@ -26,12 +26,12 @@ export default function Home() {
         <span className="text-lg font-bold tracking-widest text-glow">SITREP</span>
         <span className="flex items-center gap-2 text-xs text-glow">
           <span className="h-2 w-2 animate-pulse rounded-full bg-phosphor" />
-          LIVE
+          AO VIVO
         </span>
       </header>
       {(error || stale) && (
         <div className="bg-severity-high/20 px-4 py-1 text-center text-xs text-severity-high">
-          {error ?? "Showing cached data — live sources are temporarily unavailable."}
+          {error ?? "Mostrando dados em cache — fontes ao vivo temporariamente indisponíveis."}
         </div>
       )}
       <div className="flex flex-1 overflow-hidden">

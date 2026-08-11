@@ -101,7 +101,7 @@ export function MapView({
   if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-panel text-sm opacity-60">
-        Map unavailable — NEXT_PUBLIC_MAPBOX_TOKEN is not configured.
+        Mapa indisponível — NEXT_PUBLIC_MAPBOX_TOKEN não está configurado.
       </div>
     );
   }

@@ -101,7 +101,7 @@ function buildPrompt(events: ConflictEvent[]): string {
   return [
     "You are deduplicating and refining conflict event reports for a live news feed.",
     "Below is a JSON array of events, possibly containing near-duplicates describing the same incident from different sources.",
-    "Merge near-duplicates into a single entry (keep the more specific location/headline), write each headline as one concise sentence, and set severity to one of low/medium/high/critical and confidence to a 0-100 integer reflecting how corroborated the event is.",
+    "Merge near-duplicates into a single entry (keep the more specific location/headline), write each headline as one concise sentence IN BRAZILIAN PORTUGUESE (translate if the source is in another language), and set severity to one of low/medium/high/critical and confidence to a 0-100 integer reflecting how corroborated the event is.",
     "Return ONLY a JSON array of objects with exactly these fields: id, lat, lng, locationName, country, headline, source, sourceUrl, timestamp, severity, confidence. No prose, no markdown fences.",
     "",
     JSON.stringify(events),

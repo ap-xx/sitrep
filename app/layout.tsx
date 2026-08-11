@@ -9,8 +9,8 @@ const terminalFont = Share_Tech_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SITREP — Live Conflict Map",
-  description: "Real-time conflict tracking map and news feed.",
+  title: "SITREP — Mapa de Conflitos ao Vivo",
+  description: "Mapa e feed de notícias de conflitos em tempo real.",
 };
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={terminalFont.variable}>
+    <html lang="pt-BR" className={terminalFont.variable}>
       <body>{children}</body>
     </html>
   );
