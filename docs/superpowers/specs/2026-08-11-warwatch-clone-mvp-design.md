@@ -1,4 +1,4 @@
-# WarWatch Clone — MVP Design (Map + Live Conflict Feed)
+# SITREP — MVP Design (Map + Live Conflict Feed)
 
 ## Context
 
@@ -61,7 +61,7 @@ type ConflictEvent = {
 
 ## Components
 
-- `app/page.tsx` — dashboard shell: header + `<MapView>` + `<NewsFeed>`, shared `events` state fetched via a polling hook.
+- `app/page.tsx` — dashboard shell: header (product name "SITREP") + `<MapView>` + `<NewsFeed>`, shared `events` state fetched via a polling hook.
 - `components/MapView.tsx` — Mapbox GL JS map (dark style, e.g. `mapbox://styles/mapbox/dark-v11`), renders one marker per event colored by `severity`. Marker click emits a "select event" callback.
 - `components/NewsFeed.tsx` — scrollable list of event cards (location, country, headline, source, relative time, "SOURCE →" link). Includes a severity filter (All / Critical / High). Card click emits the same "select event" callback, which the map listens to for fly-to + highlight.
 - `app/api/events/route.ts` — the fetch/normalize/dedupe/cache pipeline described above.
