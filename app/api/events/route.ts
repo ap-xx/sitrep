@@ -3,13 +3,11 @@ import { fetchAcledEvents } from "@/lib/acled";
 import { fetchGdeltEvents } from "@/lib/gdelt";
 import { refineWithClaude } from "@/lib/refineWithClaude";
 import type { ConflictEvent } from "@/lib/types";
-
-const CACHE_TTL_MS = 10 * 60 * 1000;
-
-let cache: { events: ConflictEvent[]; updatedAt: number } | null = null;
+import { CACHE_TTL_MS, getCache, setCache } from "./cache";
 
 export async function GET() {
   const now = Date.now();
+  const cache = getCache();
 
   if (cache && now - cache.updatedAt < CACHE_TTL_MS) {
     return NextResponse.json({
@@ -55,15 +53,11 @@ export async function GET() {
 
   const refined = await refineWithClaude(fetched);
 
-  cache = { events: refined, updatedAt: now };
+  setCache({ events: refined, updatedAt: now });
 
   return NextResponse.json({
     events: refined,
     stale: false,
     updatedAt: new Date(now).toISOString(),
   });
-}
-
-export function __resetCacheForTests() {
-  cache = null;
 }

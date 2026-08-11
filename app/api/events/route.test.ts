@@ -5,7 +5,8 @@ vi.mock("@/lib/acled");
 vi.mock("@/lib/gdelt");
 vi.mock("@/lib/refineWithClaude");
 
-import { GET, __resetCacheForTests } from "./route";
+import { GET } from "./route";
+import { resetCacheForTests } from "./cache";
 import * as acledModule from "@/lib/acled";
 import * as gdeltModule from "@/lib/gdelt";
 import * as refineModule from "@/lib/refineWithClaude";
@@ -29,7 +30,7 @@ const sampleEvent: ConflictEvent = {
 };
 
 beforeEach(() => {
-  __resetCacheForTests();
+  resetCacheForTests();
   fetchAcledEventsMock.mockReset();
   fetchGdeltEventsMock.mockReset();
   refineWithClaudeMock.mockReset();
