@@ -23,8 +23,12 @@ export function useEvents() {
         const response = await fetch("/api/events");
         const body = (await response.json()) as EventsResponse;
         if (!cancelled) {
-          setData(body);
-          setError(response.ok ? null : "Live data unavailable — retrying");
+          if (response.ok) {
+            setData(body);
+            setError(null);
+          } else {
+            setError("Live data unavailable — retrying");
+          }
         }
       } catch {
         if (!cancelled) {

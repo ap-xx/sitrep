@@ -33,9 +33,16 @@ export function EventCard({
   onSelect: (event: ConflictEvent) => void;
 }) {
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onSelect(event)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect(event);
+        }
+      }}
       className={`w-full border-l-2 px-3 py-2 text-left hover:bg-panel-border/40 ${
         SEVERITY_CLASS[event.severity]
       } ${selected ? "bg-panel-border/60" : ""}`}
@@ -60,6 +67,6 @@ export function EventCard({
           SOURCE →
         </a>
       )}
-    </button>
+    </div>
   );
 }
