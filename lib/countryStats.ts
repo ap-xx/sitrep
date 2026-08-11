@@ -1,11 +1,19 @@
 import type { ConflictEvent, Severity } from "./types";
 
-const SEVERITY_RANK: Record<Severity, number> = {
+export const SEVERITY_RANK: Record<Severity, number> = {
   low: 0,
   medium: 1,
   high: 2,
   critical: 3,
 };
+
+export function dominantSeverityOf(events: ConflictEvent[]): Severity {
+  return events.reduce<Severity>(
+    (worst, event) =>
+      SEVERITY_RANK[event.severity] > SEVERITY_RANK[worst] ? event.severity : worst,
+    events[0].severity,
+  );
+}
 
 export type CountryStats = {
   eventCount: number;
@@ -24,11 +32,5 @@ export function computeCountryStats(
     return { eventCount: 0, dominantSeverity: null };
   }
 
-  const dominantSeverity = matches.reduce<Severity>(
-    (worst, event) =>
-      SEVERITY_RANK[event.severity] > SEVERITY_RANK[worst] ? event.severity : worst,
-    matches[0].severity,
-  );
-
-  return { eventCount: matches.length, dominantSeverity };
+  return { eventCount: matches.length, dominantSeverity: dominantSeverityOf(matches) };
 }

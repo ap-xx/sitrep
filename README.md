@@ -26,7 +26,10 @@ With `.env` fully populated:
 - [ ] The severity filter buttons narrow the feed correctly.
 - [ ] Temporarily setting `ACLED_PASSWORD` to an invalid value and restarting the dev server does **not** crash the app — GDELT-only data still loads, or (if you also break GDELT) the "Live data unavailable" banner appears instead of a blank page.
 - [ ] Clicking on a country's landmass on the map opens a panel with a short Wikipedia summary and the count/dominant severity of tracked events there.
+- [ ] The top-left panel lists up to 10 countries ranked by tracked event count; clicking one flies the map there and opens its country panel.
+- [ ] The commodities ticker below the header shows oil/gold/wheat prices (no API key required — public Yahoo Finance endpoint).
+- [ ] When a new CRITICAL-severity event appears on a poll (not on first load), a flashing red banner and a short beep appear/play, then auto-dismiss after a few seconds.
 
 ## Out of scope for this version
 
-Commodities ticker, Conflict Trends panel, Predictions panel, live video stream, PRO paywall, and online-viewer counter — see `docs/superpowers/specs/2026-08-11-warwatch-clone-mvp-design.md` for the full non-goals list. These would each get their own design spec in a future phase.
+Predictions panel (Polymarket), live video stream, PRO paywall, and online-viewer counter — see `docs/superpowers/specs/2026-08-11-warwatch-clone-mvp-design.md` for the original non-goals list. Commodities ticker and Conflict Trends were originally listed there too but have since been added.

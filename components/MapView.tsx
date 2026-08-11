@@ -17,11 +17,13 @@ export function MapView({
   selectedId,
   onSelect,
   onCountrySelect,
+  focus,
 }: {
   events: ConflictEvent[];
   selectedId: string | null;
   onSelect: (event: ConflictEvent) => void;
   onCountrySelect: (countryName: string) => void;
+  focus: { lat: number; lng: number } | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -97,6 +99,12 @@ export function MapView({
       map.flyTo({ center: [event.lng, event.lat], zoom: 6 });
     }
   }, [selectedId, events]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !focus) return;
+    map.flyTo({ center: [focus.lng, focus.lat], zoom: 5 });
+  }, [focus]);
 
   if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
     return (
