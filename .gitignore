@@ -6,3 +6,4 @@ node_modules
 *.log
 test_output.txt
 .claude/settings.local.json
+.vercel
