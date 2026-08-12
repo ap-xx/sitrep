@@ -7,7 +7,7 @@ import { CountryPanel } from "@/components/CountryPanel";
 import { TrendsPanel } from "@/components/TrendsPanel";
 import { CommoditiesTicker } from "@/components/CommoditiesTicker";
 import { useEvents } from "@/hooks/useEvents";
-import { playAlertBeep } from "@/lib/alertSound";
+import { playAlertBeep, primeAlertAudio } from "@/lib/alertSound";
 import type { ConflictEvent } from "@/lib/types";
 import type { CountryTrend } from "@/lib/trends";
 
@@ -31,6 +31,10 @@ export default function Home() {
   const handleTrendSelect = useCallback((trend: CountryTrend) => {
     setSelectedCountry(trend.country);
     setMapFocus({ lat: trend.lat, lng: trend.lng });
+  }, []);
+
+  useEffect(() => {
+    primeAlertAudio();
   }, []);
 
   useEffect(() => {
