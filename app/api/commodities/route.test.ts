@@ -31,7 +31,7 @@ describe("GET /api/commodities", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.quotes).toHaveLength(3);
+    expect(body.quotes).toHaveLength(8);
     expect(body.quotes[0].price).toBe(110);
     expect(body.quotes[0].changePercent).toBeCloseTo(10);
   });
@@ -75,10 +75,10 @@ describe("GET /api/commodities", () => {
     global.fetch = fetchMock as unknown as typeof fetch;
 
     await GET();
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(8);
 
     vi.advanceTimersByTime(60 * 1000);
     await GET();
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(8);
   });
 });

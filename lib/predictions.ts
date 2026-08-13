@@ -25,7 +25,16 @@ type GammaMarket = {
   endDate?: string;
   active: boolean;
   closed: boolean;
+  events?: Array<{ slug: string }>;
 };
+
+function marketUrl(market: GammaMarket): string {
+  // Polymarket pages live at /event/<event-slug>, which differs from the
+  // market's own slug — a market belongs to a parent event and only the
+  // event's slug resolves to a real page.
+  const eventSlug = market.events?.[0]?.slug;
+  return `https://polymarket.com/event/${eventSlug ?? market.slug}`;
+}
 
 function parseProbability(market: GammaMarket): number | null {
   try {
@@ -74,7 +83,7 @@ export async function fetchPredictionMarkets(): Promise<PredictionMarket[]> {
         probability,
         volume24hr: m.volume24hr ?? 0,
         endDate: m.endDate ?? null,
-        url: `https://polymarket.com/event/${m.slug}`,
+        url: marketUrl(m),
       } satisfies PredictionMarket;
     })
     .filter((m): m is PredictionMarket => m !== null)

@@ -41,6 +41,16 @@ describe("fetchPredictionMarkets", () => {
     expect(markets[0].url).toBe("https://polymarket.com/event/will-russia-ukraine-ceasefire");
   });
 
+  it("links to the parent event's slug rather than the market's own slug", async () => {
+    mockMarkets([
+      market({ events: [{ slug: "russia-ukraine-war" }] }),
+    ]);
+
+    const markets = await fetchPredictionMarkets();
+
+    expect(markets[0].url).toBe("https://polymarket.com/event/russia-ukraine-war");
+  });
+
   it("filters out markets unrelated to conflict/geopolitics", async () => {
     mockMarkets([
       market({ question: "Will the Lakers win the NBA championship?" }),

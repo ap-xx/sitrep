@@ -7,8 +7,13 @@ const CHART_ENDPOINT = "https://query1.finance.yahoo.com/v8/finance/chart/";
 
 const SYMBOLS: Array<{ symbol: string; label: string }> = [
   { symbol: "CL=F", label: "PETRÓLEO (WTI)" },
+  { symbol: "BZ=F", label: "PETRÓLEO (BRENT)" },
   { symbol: "GC=F", label: "OURO" },
+  { symbol: "SI=F", label: "PRATA" },
+  { symbol: "NG=F", label: "GÁS NATURAL" },
   { symbol: "ZW=F", label: "TRIGO" },
+  { symbol: "ZC=F", label: "MILHO" },
+  { symbol: "HG=F", label: "COBRE" },
 ];
 
 type ChartResponse = {

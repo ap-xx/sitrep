@@ -33,6 +33,7 @@ export default function Home() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number } | null>(null);
   const [activeAlert, setActiveAlert] = useState<ConflictEvent | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   const handleSelect = useCallback((event: ConflictEvent) => {
     setSelectedId(event.id);
@@ -60,9 +61,10 @@ export default function Home() {
   useEffect(() => {
     if (!alert) return;
     setActiveAlert(alert);
-    playAlertBeep();
+    if (soundEnabled) playAlertBeep();
     const timer = setTimeout(() => setActiveAlert(null), ALERT_DISPLAY_MS);
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alert]);
 
   return (
@@ -116,8 +118,14 @@ export default function Home() {
                 onClose={() => setSelectedCountry(null)}
               />
             )}
+            <NewsFeed
+              events={events}
+              selectedId={selectedId}
+              onSelect={handleSelect}
+              soundEnabled={soundEnabled}
+              onToggleSound={() => setSoundEnabled((s) => !s)}
+            />
           </div>
-          <NewsFeed events={events} selectedId={selectedId} onSelect={handleSelect} />
         </div>
       )}
 

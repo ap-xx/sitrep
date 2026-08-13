@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import type { ConflictEvent } from "@/lib/types";
+import { computeCountryFillColors, DEFAULT_RISK_FILL_COLOR } from "@/lib/countryRisk";
+import { countNearbyEvents, STRATEGIC_POINTS } from "@/lib/strategicPoints";
 
 const SEVERITY_COLOR: Record<ConflictEvent["severity"], string> = {
   low: "#39ff88",
@@ -11,6 +13,35 @@ const SEVERITY_COLOR: Record<ConflictEvent["severity"], string> = {
   high: "#ff9f1c",
   critical: "#ff2d55",
 };
+
+function buildCountryFillExpression(events: ConflictEvent[]): mapboxgl.Expression {
+  const colors = computeCountryFillColors(events);
+  const expression: mapboxgl.Expression = ["match", ["get", "name_en"]];
+  for (const [country, color] of Object.entries(colors)) {
+    expression.push(country, color);
+  }
+  expression.push(DEFAULT_RISK_FILL_COLOR);
+  return expression;
+}
+
+function createStrategicPointElement(count: number): HTMLDivElement {
+  const wrapper = document.createElement("div");
+  wrapper.className = "relative";
+
+  const ring = document.createElement("div");
+  ring.className = "h-4 w-4 rounded-full border-2 border-[#3ab7ff] bg-[#3ab7ff]/25";
+  wrapper.appendChild(ring);
+
+  if (count > 0) {
+    const badge = document.createElement("div");
+    badge.className =
+      "absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-severity-critical text-[10px] font-bold text-white";
+    badge.textContent = String(count);
+    wrapper.appendChild(badge);
+  }
+
+  return wrapper;
+}
 
 export function MapView({
   events,
@@ -28,6 +59,8 @@ export function MapView({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const strategicMarkersRef = useRef<mapboxgl.Marker[]>([]);
+  const mapReadyRef = useRef(false);
 
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -52,7 +85,7 @@ export function MapView({
         type: "fill",
         source: "country-boundaries",
         "source-layer": "country_boundaries",
-        paint: { "fill-color": "#000000", "fill-opacity": 0 },
+        paint: { "fill-color": DEFAULT_RISK_FILL_COLOR, "fill-opacity": 0.22 },
       });
 
       map.on("click", "country-boundaries-fill", (e) => {
@@ -65,11 +98,14 @@ export function MapView({
       map.on("mouseleave", "country-boundaries-fill", () => {
         map.getCanvas().style.cursor = "";
       });
+
+      mapReadyRef.current = true;
     });
 
     return () => {
       map.remove();
       mapRef.current = null;
+      mapReadyRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -90,6 +126,31 @@ export function MapView({
       markersRef.current.push(marker);
     }
   }, [events, onSelect]);
+
+  // Country choropleth: recolor once the style/layer is ready, and again
+  // whenever the event set changes.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current || !map.getLayer("country-boundaries-fill")) return;
+    map.setPaintProperty("country-boundaries-fill", "fill-color", buildCountryFillExpression(events));
+  }, [events]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    strategicMarkersRef.current.forEach((marker) => marker.remove());
+    strategicMarkersRef.current = [];
+
+    for (const point of STRATEGIC_POINTS) {
+      const count = countNearbyEvents(events, point);
+      const marker = new mapboxgl.Marker({ element: createStrategicPointElement(count) })
+        .setLngLat([point.lng, point.lat])
+        .setPopup(new mapboxgl.Popup({ closeButton: false, offset: 12 }).setText(point.name))
+        .addTo(map);
+      strategicMarkersRef.current.push(marker);
+    }
+  }, [events]);
 
   useEffect(() => {
     const map = mapRef.current;
