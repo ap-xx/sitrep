@@ -101,7 +101,7 @@ export function MapView({
         type: "line",
         source: "country-boundaries",
         "source-layer": "country_boundaries",
-        paint: { "line-color": "#39ff88", "line-width": 1, "line-opacity": 0.5 },
+        paint: { "line-color": DEFAULT_RISK_FILL_COLOR, "line-width": 1.5, "line-opacity": 0.9 },
       });
 
       map.on("click", "country-boundaries-fill", (e) => {
@@ -144,11 +144,15 @@ export function MapView({
   }, [events, onSelect]);
 
   // Country choropleth: recolor once the style/layer is ready, and again
-  // whenever the event set changes.
+  // whenever the event set changes. The outline tracks the same
+  // per-country severity color as the fill, just at full opacity, so
+  // borders read clearly against the translucent fill.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReadyRef.current || !map.getLayer("country-boundaries-fill")) return;
-    map.setPaintProperty("country-boundaries-fill", "fill-color", buildCountryFillExpression(events));
+    const expression = buildCountryFillExpression(events);
+    map.setPaintProperty("country-boundaries-fill", "fill-color", expression);
+    map.setPaintProperty("country-boundaries-outline", "line-color", expression);
   }, [events]);
 
   useEffect(() => {
