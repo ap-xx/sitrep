@@ -20,15 +20,16 @@ A live conflict-tracking dashboard: an interactive dark-themed world map paired 
 With `.env` fully populated:
 
 - [ ] Map loads with the dark Mapbox style and shows markers colored by severity.
-- [ ] Countries are tinted green by default, and amber/orange/red for countries with tracked events, based on the dominant severity there.
-- [ ] Eight blue ring markers appear at major maritime chokepoints (Hormuz, Suez, Bab-el-Mandeb, Bosphorus, Gibraltar, Panama, Kerch, Malacca) — hovering/clicking shows the strait's name, and a red count badge appears when events are tracked within ~400km.
+- [ ] Countries are tinted green by default, and amber/orange/red for countries with tracked events, based on the dominant severity there, with a thin green outline around every country's border.
+- [ ] Event markers on the map are small glowing dots colored by severity, not the default Mapbox teardrop pin.
+- [ ] Eight blue ring markers appear at major maritime chokepoints (Hormuz, Suez, Bab-el-Mandeb, Bosphorus, Gibraltar, Panama, Kerch, Malacca) — hovering/clicking shows the strait's name in a dark, high-contrast popup matching the terminal theme, and a red count badge appears when events are tracked within ~400km.
 - [ ] The "ÚLTIMAS NOTÍCIAS" panel floating over the bottom-left of the map populates with entries roughly matching the markers on the map, and shows a "48H · N" count of events from the last 48 hours.
 - [ ] Clicking a marker highlights the matching card in the feed.
 - [ ] Clicking a card in the feed flies the map to that event's location.
 - [ ] The severity filter buttons narrow the feed correctly.
 - [ ] The 🔔/🔕 button in the feed header toggles the critical-alert beep; the ▲/▼ button collapses/expands the feed to just its header.
 - [ ] Temporarily setting `ACLED_PASSWORD` to an invalid value and restarting the dev server does **not** crash the app — GDELT-only data still loads, or (if you also break GDELT) the "Live data unavailable" banner appears instead of a blank page.
-- [ ] Clicking on a country's landmass on the map opens a panel with a short Wikipedia summary and the count/dominant severity of tracked events there.
+- [ ] Clicking on a country's landmass on the map opens a panel with a short Wikipedia summary and the count/dominant severity of tracked events there — including for events whose source used an abbreviated or alternate country name (e.g. an event tagged "DRC" still counts toward Democratic Republic of the Congo).
 - [ ] The top-left panel lists up to 10 countries ranked by tracked event count; clicking one flies the map there and opens its country panel.
 - [ ] The commodities ticker below the header shows WTI/Brent oil, gold, silver, natural gas, wheat, corn, and copper prices (no API key required — public Yahoo Finance endpoint).
 - [ ] When a new CRITICAL-severity event appears on a poll (not on first load), a HUD-style popup appears over the map (with a beep), then auto-dismisses after a few seconds.

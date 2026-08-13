@@ -1,4 +1,5 @@
 import { makeEventId } from "./ids";
+import { canonicalCountryName } from "./countryNames";
 import type { ConflictEvent } from "./types";
 
 const ACLED_TOKEN_ENDPOINT = "https://acleddata.com/oauth/token";
@@ -107,7 +108,7 @@ export async function fetchAcledEvents(): Promise<ConflictEvent[]> {
         lat: Number.parseFloat(raw.latitude),
         lng: Number.parseFloat(raw.longitude),
         locationName: raw.location,
-        country: raw.country,
+        country: canonicalCountryName(raw.country),
         headline: `${raw.sub_event_type} — ${raw.notes}`.slice(0, 200),
         source: "ACLED",
         sourceUrl: "https://acleddata.com/data-export-tool/",

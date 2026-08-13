@@ -24,6 +24,15 @@ function buildCountryFillExpression(events: ConflictEvent[]): mapboxgl.Expressio
   return expression;
 }
 
+function createEventMarkerElement(severity: ConflictEvent["severity"]): HTMLDivElement {
+  const color = SEVERITY_COLOR[severity];
+  const dot = document.createElement("div");
+  dot.className = "h-3 w-3 cursor-pointer rounded-full border border-black/50";
+  dot.style.backgroundColor = color;
+  dot.style.boxShadow = `0 0 6px 2px ${color}`;
+  return dot;
+}
+
 function createStrategicPointElement(count: number): HTMLDivElement {
   const wrapper = document.createElement("div");
   wrapper.className = "relative";
@@ -87,6 +96,13 @@ export function MapView({
         "source-layer": "country_boundaries",
         paint: { "fill-color": DEFAULT_RISK_FILL_COLOR, "fill-opacity": 0.22 },
       });
+      map.addLayer({
+        id: "country-boundaries-outline",
+        type: "line",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        paint: { "line-color": "#39ff88", "line-width": 1, "line-opacity": 0.5 },
+      });
 
       map.on("click", "country-boundaries-fill", (e) => {
         const name = e.features?.[0]?.properties?.name_en as string | undefined;
@@ -118,7 +134,7 @@ export function MapView({
     markersRef.current = [];
 
     for (const event of events) {
-      const marker = new mapboxgl.Marker({ color: SEVERITY_COLOR[event.severity] })
+      const marker = new mapboxgl.Marker({ element: createEventMarkerElement(event.severity) })
         .setLngLat([event.lng, event.lat])
         .addTo(map);
 
@@ -146,7 +162,11 @@ export function MapView({
       const count = countNearbyEvents(events, point);
       const marker = new mapboxgl.Marker({ element: createStrategicPointElement(count) })
         .setLngLat([point.lng, point.lat])
-        .setPopup(new mapboxgl.Popup({ closeButton: false, offset: 12 }).setText(point.name))
+        .setPopup(
+          new mapboxgl.Popup({ closeButton: false, offset: 12, className: "sitrep-popup" }).setText(
+            point.name,
+          ),
+        )
         .addTo(map);
       strategicMarkersRef.current.push(marker);
     }

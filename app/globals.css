@@ -45,3 +45,23 @@ body::after {
 .mapboxgl-canvas {
   filter: grayscale(1) sepia(1) hue-rotate(60deg) saturate(4) brightness(0.8) contrast(1.15);
 }
+
+.sitrep-popup .mapboxgl-popup-content {
+  background-color: #040a06;
+  color: #39ff88;
+  border: 1px solid #12321d;
+  border-radius: 0;
+  box-shadow: 0 0 8px rgba(57, 255, 136, 0.35);
+  font-family: var(--font-terminal), ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.75rem;
+  padding: 6px 10px;
+}
+
+.sitrep-popup .mapboxgl-popup-tip {
+  border-top-color: #040a06;
+  border-bottom-color: #040a06;
+}
+
+.sitrep-popup .mapboxgl-popup-close-button {
+  color: #39ff88;
+}

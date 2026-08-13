@@ -1,5 +1,6 @@
 import { makeEventId } from "./ids";
 import { getCountryCentroid } from "./countryCentroids";
+import { canonicalCountryName } from "./countryNames";
 import type { ConflictEvent } from "./types";
 
 const GDELT_GEO_ENDPOINT = "https://api.gdeltproject.org/api/v2/geo/geo";
@@ -85,8 +86,9 @@ export async function fetchGdeltGeoEvents(): Promise<ConflictEvent[]> {
         lat,
         lng,
         locationName: feature.properties.name,
-        country:
+        country: canonicalCountryName(
           feature.properties.name.split(",").pop()?.trim() ?? feature.properties.name,
+        ),
         headline,
         source: "GDELT",
         sourceUrl: url,
@@ -123,15 +125,16 @@ export async function fetchGdeltDocEvents(): Promise<ConflictEvent[]> {
 
   return payload.articles
     .map((article): ConflictEvent | null => {
-      const centroid = getCountryCentroid(article.sourcecountry);
+      const country = canonicalCountryName(article.sourcecountry);
+      const centroid = getCountryCentroid(country);
       if (!centroid) return null;
 
       return {
         id: makeEventId("GDELT-DOC", article.url),
         lat: centroid.lat,
         lng: centroid.lng,
-        locationName: article.sourcecountry,
-        country: article.sourcecountry,
+        locationName: country,
+        country,
         headline: article.title,
         source: "GDELT",
         sourceUrl: article.url,
