@@ -162,6 +162,53 @@ describe("refineWithClaude", () => {
     expect(result.slice(60)).toEqual(manyEvents.slice(60));
   });
 
+  it("recovers events from a response truncated mid-array, keeping the unfinished event raw", async () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
+
+    const threeEvents: ConflictEvent[] = [
+      makeEvent({ id: "e1", headline: "Original 1" }),
+      makeEvent({ id: "e2", headline: "Original 2" }),
+      makeEvent({ id: "e3", headline: "Original 3" }),
+    ];
+
+    const refinedFirstTwo = [
+      { ...threeEvents[0], headline: "Refined 1" },
+      { ...threeEvents[1], headline: "Refined 2" },
+    ];
+
+    // Simulate a response truncated mid-object, wrapped in an opening
+    // markdown fence with no closing fence — matches what Claude produces
+    // when it hits max_tokens partway through the array.
+    const truncatedText =
+      "```json\n" +
+      JSON.stringify(refinedFirstTwo).slice(0, -1) +
+      ',{"id":"e3","lat":13.05,"lng":43.25,"headline":"Refined 3 but cut off';
+
+    createMock.mockResolvedValue({
+      content: [{ type: "text", text: truncatedText }],
+    });
+
+    const result = await refineWithClaude(threeEvents);
+
+    expect(result).toHaveLength(3);
+    expect(result.find((e) => e.id === "e1")?.headline).toBe("Refined 1");
+    expect(result.find((e) => e.id === "e2")?.headline).toBe("Refined 2");
+    expect(result.find((e) => e.id === "e3")?.headline).toBe("Original 3");
+  });
+
+  it("falls back to raw events when the truncated response has no complete elements to recover", async () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
+
+    createMock.mockResolvedValue({
+      content: [
+        { type: "text", text: '```json\n[{"id":"abc123","lat":13.05,"headline":"cut off mid' },
+      ],
+    });
+
+    const result = await refineWithClaude(sampleEvents);
+    expect(result).toEqual(sampleEvents);
+  });
+
   it("logs a warning via console.warn when a failure path falls back to raw events", async () => {
     vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});

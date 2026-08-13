@@ -65,7 +65,7 @@ export async function refineWithClaude(events: ConflictEvent[]): Promise<Conflic
 
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 8192,
+      max_tokens: 16000,
       messages: [{ role: "user", content: buildPrompt(toRefine) }],
     });
 
@@ -75,12 +75,31 @@ export async function refineWithClaude(events: ConflictEvent[]): Promise<Conflic
       return events;
     }
 
-    let parsed: ConflictEvent[];
+    const jsonText = extractJson(textBlock.text);
+
+    let parsed: unknown;
     try {
-      parsed = JSON.parse(extractJson(textBlock.text)) as ConflictEvent[];
-    } catch (error) {
-      console.warn("Claude refinement fell back to raw events: failed to parse JSON response", error);
-      return events;
+      parsed = JSON.parse(jsonText);
+    } catch {
+      const repaired = repairTruncatedJsonArray(jsonText);
+      if (!repaired) {
+        console.warn(
+          "Claude refinement fell back to raw events: failed to parse JSON response (likely truncated, no complete elements found)",
+        );
+        return events;
+      }
+      try {
+        parsed = JSON.parse(repaired);
+        console.warn(
+          "Claude refinement response was truncated; recovered the complete leading elements and kept the raw (untranslated) version of the rest",
+        );
+      } catch (error) {
+        console.warn(
+          "Claude refinement fell back to raw events: failed to parse JSON response even after truncation repair",
+          error,
+        );
+        return events;
+      }
     }
 
     if (!Array.isArray(parsed) || parsed.length === 0 || !parsed.every(isValidConflictEvent)) {
@@ -90,7 +109,11 @@ export async function refineWithClaude(events: ConflictEvent[]): Promise<Conflic
       return events;
     }
 
-    return [...parsed, ...overflow];
+    const refined = parsed as ConflictEvent[];
+    const refinedIds = new Set(refined.map((e) => e.id));
+    const notRefined = toRefine.filter((e) => !refinedIds.has(e.id));
+
+    return [...refined, ...notRefined, ...overflow];
   } catch (error) {
     console.warn("Claude refinement fell back to raw events:", error);
     return events;
@@ -111,5 +134,22 @@ function buildPrompt(events: ConflictEvent[]): string {
 function extractJson(text: string): string {
   const trimmed = text.trim();
   const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  return fenceMatch ? fenceMatch[1] : trimmed;
+  if (fenceMatch) return fenceMatch[1];
+
+  // No closing fence found — the response was likely truncated mid-output.
+  // Still strip a leading opening fence if present, so the repair step below
+  // sees the raw (incomplete) JSON array rather than the fence marker.
+  const openFenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*)$/);
+  return openFenceMatch ? openFenceMatch[1] : trimmed;
+}
+
+/**
+ * Best-effort recovery for a JSON array truncated mid-element (e.g. hit
+ * max_tokens). Cuts back to the last complete "},{" boundary and closes the
+ * array, dropping only the incomplete trailing element.
+ */
+function repairTruncatedJsonArray(text: string): string | null {
+  const lastCompleteObjectEnd = text.lastIndexOf("},");
+  if (lastCompleteObjectEnd === -1) return null;
+  return `${text.slice(0, lastCompleteObjectEnd + 1)}]`;
 }
