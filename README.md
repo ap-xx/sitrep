@@ -28,7 +28,8 @@ With `.env` fully populated:
 - [ ] Clicking on a country's landmass on the map opens a panel with a short Wikipedia summary and the count/dominant severity of tracked events there.
 - [ ] The top-left panel lists up to 10 countries ranked by tracked event count; clicking one flies the map there and opens its country panel.
 - [ ] The commodities ticker below the header shows oil/gold/wheat prices (no API key required — public Yahoo Finance endpoint).
-- [ ] When a new CRITICAL-severity event appears on a poll (not on first load), a flashing red banner and a short beep appear/play, then auto-dismiss after a few seconds.
+- [ ] When a new CRITICAL-severity event appears on a poll (not on first load), a HUD-style popup appears over the map (with a beep), then auto-dismisses after a few seconds.
+- [ ] The MAPA / TENDÊNCIAS / COMMODITIES / PREVISÕES tabs below the ticker switch the main view; TENDÊNCIAS lists up to 20 countries with a "VER NO MAPA" link back to the map, COMMODITIES shows larger price cards, and PREVISÕES lists conflict/geopolitics prediction markets from Polymarket's public API (no key required) with a probability bar and 24h volume, linking out to the market.
 
 ## Data source notes
 
@@ -37,4 +38,4 @@ With `.env` fully populated:
 
 ## Out of scope for this version
 
-Predictions panel (Polymarket), live video stream, PRO paywall, and online-viewer counter — see `docs/superpowers/specs/2026-08-11-warwatch-clone-mvp-design.md` for the original non-goals list. Commodities ticker and Conflict Trends were originally listed there too but have since been added.
+Live video stream, PRO paywall, and online-viewer counter — see `docs/superpowers/specs/2026-08-11-warwatch-clone-mvp-design.md` for the original non-goals list. Commodities ticker, Conflict Trends, and the Predictions panel were originally listed there too but have since been added (all free, no paywall).

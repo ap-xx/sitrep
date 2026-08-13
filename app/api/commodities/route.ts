@@ -26,8 +26,8 @@ type ChartResponse = {
 async function fetchQuote(symbol: string, label: string): Promise<CommodityQuote> {
   try {
     const response = await fetch(
-      `${CHART_ENDPOINT}${encodeURIComponent(symbol)}?interval=1d&range=1d`,
-      { headers: { "User-Agent": "Mozilla/5.0" } },
+      `${CHART_ENDPOINT}${encodeURIComponent(symbol)}?interval=1d&range=1d&_=${Date.now()}`,
+      { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store" },
     );
 
     if (!response.ok) {

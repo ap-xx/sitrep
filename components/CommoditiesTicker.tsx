@@ -1,41 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-const POLL_INTERVAL_MS = 5 * 60 * 1000;
-
-type CommodityQuote = {
-  symbol: string;
-  label: string;
-  price: number | null;
-  changePercent: number | null;
-};
+import { useCommodities } from "@/hooks/useCommodities";
 
 export function CommoditiesTicker() {
-  const [quotes, setQuotes] = useState<CommodityQuote[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const response = await fetch("/api/commodities");
-        if (!response.ok) return;
-        const body = (await response.json()) as { quotes: CommodityQuote[] };
-        if (!cancelled) setQuotes(body.quotes);
-      } catch {
-        // Best-effort ticker; leave the previous quotes (if any) visible on failure.
-      }
-    }
-
-    load();
-    const interval = setInterval(load, POLL_INTERVAL_MS);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, []);
+  const quotes = useCommodities();
 
   if (quotes.length === 0) return null;
 
