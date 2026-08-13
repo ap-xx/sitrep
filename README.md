@@ -30,6 +30,11 @@ With `.env` fully populated:
 - [ ] The commodities ticker below the header shows oil/gold/wheat prices (no API key required — public Yahoo Finance endpoint).
 - [ ] When a new CRITICAL-severity event appears on a poll (not on first load), a flashing red banner and a short beep appear/play, then auto-dismiss after a few seconds.
 
+## Data source notes
+
+- **ACLED** requires a paid license for event-level API access as of August 2026 (the free `myACLED` tier only covers aggregated data). The client in `lib/acled.ts` is left in place in case you obtain a license later, but expect it to fail with a 403 otherwise — the app runs fine without it.
+- **GDELT** is the primary/only practical source. It has two independent endpoints: the precise GEO 2.0 API (city/region-level coordinates) and the DOC 2.0 API (article-level, country-only). `lib/gdelt.ts` tries GEO first and automatically falls back to DOC — plotting events at their source country's centroid instead — if GEO is unreachable, which has happened during real GDELT-side infrastructure outages. No configuration needed; it recovers on its own once GEO comes back.
+
 ## Out of scope for this version
 
 Predictions panel (Polymarket), live video stream, PRO paywall, and online-viewer counter — see `docs/superpowers/specs/2026-08-11-warwatch-clone-mvp-design.md` for the original non-goals list. Commodities ticker and Conflict Trends were originally listed there too but have since been added.

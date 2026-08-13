@@ -1,7 +1,9 @@
 import { makeEventId } from "./ids";
+import { getCountryCentroid } from "./countryCentroids";
 import type { ConflictEvent } from "./types";
 
-const GDELT_ENDPOINT = "https://api.gdeltproject.org/api/v2/geo/geo";
+const GDELT_GEO_ENDPOINT = "https://api.gdeltproject.org/api/v2/geo/geo";
+const GDELT_DOC_ENDPOINT = "https://api.gdeltproject.org/api/v2/doc/doc";
 
 const QUERY =
   "(war OR conflict OR attack OR strike OR clash OR airstrike OR shelling OR " +
@@ -23,6 +25,17 @@ type GdeltGeoJson = {
   features: GdeltFeature[];
 };
 
+type GdeltDocArticle = {
+  url: string;
+  title: string;
+  seendate: string;
+  sourcecountry: string;
+};
+
+type GdeltDocResponse = {
+  articles: GdeltDocArticle[];
+};
+
 function extractHeadlineAndUrl(html: string): { headline: string; url: string } {
   const match = html.match(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/);
   if (!match) {
@@ -31,7 +44,20 @@ function extractHeadlineAndUrl(html: string): { headline: string; url: string } 
   return { url: match[1], headline: match[2] };
 }
 
-export async function fetchGdeltEvents(): Promise<ConflictEvent[]> {
+function parseGdeltDocDate(seendate: string): string {
+  const match = seendate.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/);
+  if (!match) return new Date().toISOString();
+  const [, y, mo, d, h, mi, s] = match;
+  return `${y}-${mo}-${d}T${h}:${mi}:${s}Z`;
+}
+
+/**
+ * Precise, city/region-level results. This is GDELT's primary geocoded feed,
+ * but it has intermittently suffered infrastructure outages independent of
+ * this app; fetchGdeltEvents() falls back to fetchGdeltDocEvents() when it's
+ * unavailable.
+ */
+export async function fetchGdeltGeoEvents(): Promise<ConflictEvent[]> {
   const params = new URLSearchParams({
     query: QUERY,
     mode: "PointData",
@@ -39,10 +65,10 @@ export async function fetchGdeltEvents(): Promise<ConflictEvent[]> {
     timespan: "24h",
   });
 
-  const response = await fetch(`${GDELT_ENDPOINT}?${params.toString()}`);
+  const response = await fetch(`${GDELT_GEO_ENDPOINT}?${params.toString()}`);
 
   if (!response.ok) {
-    throw new Error(`GDELT request failed with status ${response.status}`);
+    throw new Error(`GDELT GEO request failed with status ${response.status}`);
   }
 
   const payload = (await response.json()) as GdeltGeoJson;
@@ -69,4 +95,59 @@ export async function fetchGdeltEvents(): Promise<ConflictEvent[]> {
         confidence: Math.min(95, 40 + count * 5),
       } satisfies ConflictEvent;
     });
+}
+
+/**
+ * Fallback used when the GEO endpoint is down: article-level data with only
+ * a source country, not a precise location, so events are plotted at that
+ * country's centroid (approximate) and given a lower confidence score.
+ * Articles whose country has no known centroid are dropped rather than
+ * plotted incorrectly.
+ */
+export async function fetchGdeltDocEvents(): Promise<ConflictEvent[]> {
+  const params = new URLSearchParams({
+    query: QUERY,
+    mode: "artlist",
+    format: "json",
+    maxrecords: "75",
+    timespan: "1d",
+  });
+
+  const response = await fetch(`${GDELT_DOC_ENDPOINT}?${params.toString()}`);
+
+  if (!response.ok) {
+    throw new Error(`GDELT DOC request failed with status ${response.status}`);
+  }
+
+  const payload = (await response.json()) as GdeltDocResponse;
+
+  return payload.articles
+    .map((article): ConflictEvent | null => {
+      const centroid = getCountryCentroid(article.sourcecountry);
+      if (!centroid) return null;
+
+      return {
+        id: makeEventId("GDELT-DOC", article.url),
+        lat: centroid.lat,
+        lng: centroid.lng,
+        locationName: article.sourcecountry,
+        country: article.sourcecountry,
+        headline: article.title,
+        source: "GDELT",
+        sourceUrl: article.url,
+        timestamp: parseGdeltDocDate(article.seendate),
+        severity: "medium",
+        confidence: 35,
+      };
+    })
+    .filter((event): event is ConflictEvent => event !== null);
+}
+
+export async function fetchGdeltEvents(): Promise<ConflictEvent[]> {
+  try {
+    return await fetchGdeltGeoEvents();
+  } catch (error) {
+    console.warn("GDELT GEO fetch failed, falling back to DOC API:", error);
+    return await fetchGdeltDocEvents();
+  }
 }
